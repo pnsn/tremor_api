@@ -1,0 +1,4 @@
+-r base.txt
+#keep this local since Flask needs psycopg2 to be installed as root on production
+psycopg2
+Werkzeug==0.14.1
