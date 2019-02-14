@@ -4,7 +4,7 @@ import pytest
 sys.path.insert(0, '.')
 from app.app import create_app, db
 from app.models import Event
-from app.config import TestingConfig as conf
+# from app.config import TestingConfig as conf
 from flask import request
 import datetime
 
