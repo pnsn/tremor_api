@@ -1,51 +1,112 @@
 '''
     All this for a simple, single request api for tremor events queried by data
     What have I done with my life?
+    # app/__init__.py
+
+from flask_api import FlaskAPI
+from flask_sqlalchemy import SQLAlchemy
+
+# local import
+from instance.config import app_config
+
+# initialize sql-alchemy
+db = SQLAlchemy()
+
+
+def create_app(config_name):
+    app = FlaskAPI(__name__, instance_relative_config=True)
+    app.config.from_object(app_config[config_name])
+    app.config.from_pyfile('config.py')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+
+    return app
 '''
 from flask import request, abort, Flask, make_response
-from sqlalchemy import create_engine
+from flask_sqlalchemy import SQLAlchemy
 from flask import jsonify
 from .config import app_config
+from functools import wraps
+
+
+db = SQLAlchemy()
 def create_app(env_name):
+    from app.models import Event
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
-    db_connect = create_engine(app.config['DATABASE_URI'])
-    conn = db_connect.connect() # connect to database
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+
+    # db_connect = create_engine(app.config['DATABASE_URI'])
+    # conn = db_connect.connect() # connect to database
+
+
+    #decorator to check for api key
+    def require_apikey(view_function):
+        @wraps(view_function)
+        def decorated_function(*args, **kwargs):
+            if request.args.get('key') and request.args.get('key') == app.config['API_KEY']:
+                return view_function(*args, **kwargs)
+            else:
+                json_abort('API key required', 401)
+        return decorated_function
+
+
 
     #json exit with proper message and status code
     def json_abort(message, code):
         abort(make_response(jsonify(message = message), code))
 
-    '''
-        WARNING: to avoid SQL injection, DO NOT evalute string with user input
-        before adding to conn.execute
-        use form
-        conn.execute(string with %s,(tuple_arg1, tuple_arg2,..., tuple_argn))
-        where each %s has a coresponding tuple_arg
-    '''
+
 
        ###################ROUTES##########################################
 
 
 
     ''' Description: Get all tremor events in time period
-        Route: /events
+        Route: /v1.0/events
         Method: GET
         Required Params:
             start: string time stamp,
             stop: string time stamp,
         Returns: list of events [{event1},{event2},...,{eventn}] or 404
-        Example:/events?&start=2018-01-01&end=2018-01-02
+        Example:/v1.0/events?&start=2018-01-01&end=2018-01-02
     '''
-    @app.route('/events')
-    def events():
+    @app.route('/v1.0/events', methods=['GET'])
+    def get_events():
         starttime = request.args.get('starttime')
         endtime = request.args.get('endtime')
         if starttime and starttime is not None and endtime and endtime is not None:
-            str = "SELECT * from events WHERE time between %s::timestamp and %s::timestamp"
-            query = conn.execute(str,(starttime, endtime))
-            if query.rowcount > 0:
-                return jsonify([dict(zip(query.keys() ,i)) for i in query.cursor.fetchall()])
+            events = Event.filter_by_date(starttime, endtime)
+            if len(events.all()) > 0:
+                return jsonify([e.to_dictionary() for e in events])
             json_abort("Resource not found", 404)
         json_abort("starttime and endtime params required",422)
+
+
+    ''' Description: Get event by id, or find the latest with event_id =0
+        Route: /event
+        Method: GET
+        Required Params:
+            id
+        Returns:single event
+        Example:/v1.0/event/123
+                /v1.0/event/0 (latest)
+    '''
+    @app.route('/v1.0/event/<int:event_id>', methods=['GET'])
+    def get_event(event_id):
+        if(event_id ==0 ):
+            event = Event.get_latest()
+        else:
+
+            event = Event.get_id(event_id)
+        if event is not None:
+            return jsonify(event.to_dictionary())
+        json_abort("Resource not found", 404)
+
+    @require_apikey
+    @app.route('/v1.0/event/new', methods=['POST'])
+    def event_new():
+        pass
+
     return app
