@@ -1,10 +1,10 @@
 # tremor_api
 A simple api to request tremor data
 
-#Config
+# Config
 All configuration is managed by 
 python-dotenv and The config class in app/config.py
-##Environmental Variables
+## Environmental Variables
 keep local variables in .env This file is gitignored
 
 Once repo is cloned 
@@ -13,21 +13,21 @@ Edit .env as needed.
 The .env file is source in app/ __init__.py
 the value of APP_SETTINGS="production|staging|testing|development"  variable in .env determines which Config.Class to envoke
 
-#Development
+# Development
 APP_SETTINGS=development|testing 
 To start app:
 `run flask`
 Calls the run.py script
 
-#Testing
+# Testing
 Uses pytest. From app root:
 `pytest -s --verbose`
 
-#Production and Staging
+# Production and Staging
 Uses Gunicorn and WSGI/Apache. Does not call run.py 
 See tremor_api.wsgi file.
 
-#Routes
+# Routes
 All routes in app/app.py
 <pre>
         Route: /v1.0/events
