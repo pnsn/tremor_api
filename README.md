@@ -12,18 +12,18 @@ Once repo is cloned
 Edit .env as needed. 
 The .env file is source in app/ __init__.py
 the value of APP_SETTINGS="production|staging|testing|development"  variable in .env determines which Config.Class to envoke
-
-# Development
+# Environments
+## Development
 APP_SETTINGS=development|testing 
 To start app:
 `run flask`
 Calls the run.py script
 
-# Testing
+## Testing
 Uses pytest. From app root:
 `pytest -s --verbose`
 
-# Production and Staging
+## Production and Staging
 Uses Gunicorn and WSGI/Apache. Does not call run.py 
 See tremor_api.wsgi file.
 
