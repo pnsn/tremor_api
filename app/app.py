@@ -31,7 +31,7 @@ from functools import wraps
 
 db = SQLAlchemy()
 def create_app(env_name):
-    from app.models import Event
+    from .models import Event
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
