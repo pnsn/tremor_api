@@ -10,8 +10,10 @@ keep local variables in .env This file is gitignored
 Once repo is cloned 
 `cp .env-example .env`
 Edit .env as needed. 
+
 The .env file is source in app/ __init__.py
 the value of APP_SETTINGS="production|staging|testing|development"  variable in .env determines which Config.Class to envoke
+
 # Environments
 ## Development
 APP_SETTINGS=development|testing 
