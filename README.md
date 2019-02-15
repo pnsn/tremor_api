@@ -24,8 +24,10 @@ Uses pytest. From app root:
 `pytest -s --verbose`
 
 ## Production and Staging
-Uses Gunicorn and WSGI/Apache. Does not call run.py 
-See tremor_api.wsgi file.
+* Uses Gunicorn and WSGI/Apache
+* Uses virtualenv python 3.6
+* Does not call run.py 
+* See tremor_api.wsgi file
 
 # Routes
 All routes in app/app.py
