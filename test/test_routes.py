@@ -100,7 +100,7 @@ def test_get_event(test_client, init_database):
 
 
 def test_day_count(test_client, init_database):
-    uri = "/v1.0/day_count"
+    uri = "/v1.0/day_counts"
     response = test_client.get(uri)
     assert response.status_code == 200
     js = response.get_json()

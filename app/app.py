@@ -98,8 +98,8 @@ def create_app(env_name):
             return jsonify(event.to_dictionary())
         json_abort("Resource not found", 404)
 
-    @app.route('/v1.0/day_count', methods=['GET'])
-    def day_count():
+    @app.route('/v1.0/day_counts', methods=['GET'])
+    def day_counts():
         '''Description: Get counts for each day of tremor
 
             Route: /v1.0/day_count
