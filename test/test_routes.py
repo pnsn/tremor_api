@@ -91,7 +91,6 @@ def test_get_event(test_client, init_database):
     assert response.status_code == 200
     # find some id to test
     id = json[0]['id']
-    print(id)
 
     uri = event_uri + str(id)
     response = test_client.get(uri)
@@ -104,4 +103,5 @@ def test_day_count(test_client, init_database):
     response = test_client.get(uri)
     assert response.status_code == 200
     js = response.get_json()
+    print(js)
     assert len(js) == 3

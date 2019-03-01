@@ -1,7 +1,7 @@
 import os
-
 from app.app import create_app
-config_name = os.getenv('APP_SETTINGS') #development, production, testing, staging
+
+config_name = os.getenv('APP_SETTINGS')  # production, testing, staging ...
 app = create_app(config_name)
 
 

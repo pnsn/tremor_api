@@ -27,6 +27,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import jsonify
 from .config import app_config
 from functools import wraps
+from flask_caching import Cache
 
 db = SQLAlchemy()
 
@@ -36,6 +37,10 @@ def create_app(env_name):
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    cache_config = {'CACHE_TYPE': app.config["CACHE_TYPE"]
+                    }
+    cache = Cache(config=cache_config)
+    cache.init_app(app)
     db.init_app(app)
 
     def require_apikey(view_function):

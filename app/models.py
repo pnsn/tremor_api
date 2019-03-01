@@ -70,9 +70,10 @@ class Event(db.Model):
         with_entities() returns tuple and not query object of Events
         '''
 
-        return self.query.with_entities(db.func.date_trunc('day', self.time),
+        return self.query.with_entities(db.func.date_trunc('day', self.time)
+                                        .label('day'),
                                         db.func.count(self.time))\
-                         .group_by(self.time).all()
+                         .group_by('day').all()
 
     def delete(self):
         db.session.delete(self)
