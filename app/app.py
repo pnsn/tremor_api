@@ -37,11 +37,15 @@ def create_app(env_name):
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    cache_config = {'CACHE_TYPE': app.config["CACHE_TYPE"]
-                    }
-    cache = Cache(config=cache_config)
-    cache.init_app(app)
+    cache_config = {
+        'CACHE_TYPE': app.config["CACHE_TYPE"],
+        'CACHE_DEFAULT_TIMEOUT': app.config["CACHE_DEFAULT_TIMEOUT"],
+        'CACHE_DIR': app.config["CACHE_DIR"],
+        'CACHE_THRESHOLD': app.config["CACHE_THRESHOLD"]}
+    print(cache_config)
+    cache = Cache(app, cache_config)
     db.init_app(app)
+    # cache.init_app(app)
 
     def require_apikey(view_function):
         @wraps(view_function)
@@ -61,6 +65,9 @@ def create_app(env_name):
     # ##################ROUTES##########################################
 
     @app.route('/v1.0/events', methods=['GET'])
+    # this is how we can cache. memoize considers params as part of key
+    # otherwise use @cache.cached(...)
+    # @cache.memoize(86400)
     def get_events():
         '''Description: Get all tremor events in time period
 
@@ -115,11 +122,12 @@ def create_app(env_name):
             Example:/v1.0/day_count
         '''
         events = Event.day_count()
-        collection = []
+        collection = {}
         for e in events:
             key = e[0].strftime("%Y-%m-%d")
             val = e[1]
-            collection.append({key: val})
+            collection[key] = val
+            # collection.append({key: val})
         return jsonify(collection)
 
     @require_apikey

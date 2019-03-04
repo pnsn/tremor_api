@@ -9,9 +9,9 @@ class Config(object):
     SQLALCHEMY_DATABASE_BASE = os.getenv('TREMOR_DB_URI')
     API_KEYS = [os.getenv('TREMOR_API_KEY')]
     CACHE_TYPE = os.getenv('CACHE_TYPE')
-    CACHE_DEFAULT_TIMEOUT = os.getenv('CACHE_DEFAULT_TIMEOUT')
+    CACHE_DEFAULT_TIMEOUT = int(os.getenv('CACHE_DEFAULT_TIMEOUT'))
     CACHE_DIR = os.getenv('CACHE_DIR')
-    CACHE_THRESHOLD = os.getenv('CACHE_TRESHOLD')
+    CACHE_THRESHOLD = int(os.getenv('CACHE_THRESHOLD'))
     # CACHE_ARGS = os.getenv('CACHE_ARGS')
     CACHE_OPTIONS = os.getenv('CACHE_OPTIONS')
 
