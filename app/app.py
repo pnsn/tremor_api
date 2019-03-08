@@ -1,31 +1,11 @@
 '''
-    All this for a simple, single request api for tremor events queried by data
-    What have I done with my life?
-    # app/__init__.py
-
-from flask_api import FlaskAPI
-from flask_sqlalchemy import SQLAlchemy
-
-# local import
-from instance.config import app_config
-
-# initialize sql-alchemy
-db = SQLAlchemy()
-
-
-def create_app(config_name):
-    app = FlaskAPI(__name__, instance_relative_config=True)
-    app.config.from_object(app_config[config_name])
-    app.config.from_pyfile('config.py')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
-
-    return app
+Where all the magic happens again, and again and again
 '''
 from flask import request, abort, Flask, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_caching import Cache
 from flask_cors import CORS
+from flask_csv import send_csv
 
 from .config import app_config
 from functools import wraps
@@ -128,12 +108,23 @@ def create_app(env_name):
         '''
         starttime = request.args.get('starttime')
         endtime = request.args.get('endtime')
+        format = request.args.get('type')
         if starttime and starttime is not None and \
                 endtime and endtime is not None:
             events = Event.filter_by_date(starttime, endtime)
             if len(events.all()) > 0:
-                geo_json = export_to_geojson(events)
-                return geo_json
+                if format == 'csv':
+                    data = [e.to_dictionary() for e in events]
+                    print("ready")
+                    print(data)
+                    fieldnames = ['id', 'lat', 'lon', 'depth', 'amplitude',
+                                  'created_at', 'num_stas', 'time',
+                                  'catalog_version']
+                    filename = 'events.csv'
+                    return send_csv(data, filename, fieldnames)
+                else:
+                    geo_json = export_to_geojson(events)
+                    return geo_json
             json_abort("Resource not found", 404)
         json_abort("starttime and endtime params required", 422)
 
