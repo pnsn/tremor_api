@@ -64,6 +64,51 @@ def create_app(env_name):
     def json_abort(message, code):
         return abort(make_response(jsonify(message=message), code))
 
+    def export_to_geojson(collection):
+        '''take collection of events and create geojson python dict and jsonify
+
+
+        {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                  "type": "Feature",
+                  "geometry": {
+                    "type": "Point",
+                    "coordinates": [lon, lat]
+                  },
+                  "properties": {
+                    "depth": float,
+                    "amplitude": float,
+                    "num_stas": integer
+                    "time": string
+                  }
+                },
+                ...
+            }
+        '''
+        geo_dict = {}
+        geo_dict['type'] = "FeatureCollection"
+        geo_dict['features'] = []
+        for event in collection:
+            feature = create_geojson_feature(event)
+            geo_dict['features'].append(feature)
+        return jsonify(geo_dict)
+
+    def create_geojson_feature(obj):
+        feature = {}
+        feature['type'] = 'Feature'
+        feature['geometry'] = {}
+        feature['geometry']['type'] = 'Point'
+        feature['geometry']['coordinates'] = [obj.lon, obj.lat]
+        feature['properties'] = {}
+        feature['properties']['depth'] = obj.depth
+        feature['properties']['amplitude'] = obj.amplitude
+        feature['properties']['num_stas'] = obj.num_stas
+        feature['properties']['time'] = obj.time
+        feature['properties']['id'] = obj.id
+        return feature
+
     # ##################ROUTES##########################################
 
     @app.route('/api/v1.0/events', methods=['GET'])
@@ -87,7 +132,8 @@ def create_app(env_name):
                 endtime and endtime is not None:
             events = Event.filter_by_date(starttime, endtime)
             if len(events.all()) > 0:
-                return jsonify([e.to_dictionary() for e in events])
+                geo_json = export_to_geojson(events)
+                return geo_json
             json_abort("Resource not found", 404)
         json_abort("starttime and endtime params required", 422)
 
@@ -109,7 +155,8 @@ def create_app(env_name):
         else:
             event = Event.get_id(event_id)
         if event is not None:
-            return jsonify(event.to_dictionary())
+            feature = create_geojson_feature(event)
+            return jsonify(feature)
         json_abort("Resource not found", 404)
 
     @app.route('/api/v1.0/day_counts', methods=['GET'])

@@ -46,6 +46,7 @@ def init_database(request):
     depth = 2.0
     num_stas = 3
     amplitude = 2.0
+
     # lat, lon, depth, num_stas, time, amplitude, catalog_version=None
     for _ in range(5):
         event = Event(lat, lon, depth, num_stas, date1, amplitude,
@@ -68,12 +69,9 @@ def test_get_event(test_client, init_database):
         Only test for 401 and 422 here since they all use the same
         decorator
     '''
-
-    events = Event.query.filter_by(catalog_version=catalog_version)
-    print(events)
     # no startime and endtime
-    events_uri = "/v1.0/events"
-    event_uri = "/v1.0/event/"
+    events_uri = "/api/v1.0/events"
+    event_uri = "/api/v1.0/event/"
     uri = events_uri
     response = test_client.get(uri)
     assert response.status_code == 422
@@ -87,21 +85,22 @@ def test_get_event(test_client, init_database):
     uri = events_uri + "?starttime=2018-01-01&endtime=2018-01-01"
     response = test_client.get(uri)
     json = response.get_json()
-    assert len(json) == 5
+    assert len(json['features']) == 5
     assert response.status_code == 200
     # find some id to test
-    id = json[0]['id']
+    print(json)
+
+    id = json['features'][0]['properties']['id']
 
     uri = event_uri + str(id)
     response = test_client.get(uri)
     json = response.get_json()
-    assert json['id'] == id
+    assert json['properties']['id'] == id
 
 
 def test_day_count(test_client, init_database):
-    uri = "/v1.0/day_counts"
+    uri = "/api/v1.0/day_counts"
     response = test_client.get(uri)
     assert response.status_code == 200
     js = response.get_json()
-    print(js)
     assert len(js) == 3
