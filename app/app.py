@@ -22,12 +22,14 @@ def create_app(config_name):
 
     return app
 '''
-from flask import request, abort, Flask, make_response
+from flask import request, abort, Flask, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask import jsonify
+from flask_caching import Cache
+from flask_cors import CORS
+
 from .config import app_config
 from functools import wraps
-from flask_caching import Cache
+
 
 db = SQLAlchemy()
 
@@ -42,8 +44,8 @@ def create_app(env_name):
         'CACHE_DEFAULT_TIMEOUT': app.config["CACHE_DEFAULT_TIMEOUT"],
         'CACHE_DIR': app.config["CACHE_DIR"],
         'CACHE_THRESHOLD': app.config["CACHE_THRESHOLD"]}
-    print(cache_config)
-    cache = Cache(app, cache_config)
+    Cache(app, cache_config)
+    CORS(app, resources=r'/api/v1.0/*')
     db.init_app(app)
     # cache.init_app(app)
 
@@ -64,20 +66,20 @@ def create_app(env_name):
 
     # ##################ROUTES##########################################
 
-    @app.route('/v1.0/events', methods=['GET'])
+    @app.route('/api/v1.0/events', methods=['GET'])
     # this is how we can cache. memoize considers params as part of key
     # otherwise use @cache.cached(...)
     # @cache.memoize(86400)
     def get_events():
         '''Description: Get all tremor events in time period
 
-            Route: /v1.0/events
+            Route: /api/v1.0/events
             Method: GET
             Required Params:
                 start: string time stamp,
                 stop: string time stamp,
             Returns: list of events [{event1},{event2},...,{eventn}] or 404
-            Example:/v1.0/events?&start=2018-01-01&end=2018-01-02
+            Example:/api/v1.0/events?&start=2018-01-01&end=2018-01-02
         '''
         starttime = request.args.get('starttime')
         endtime = request.args.get('endtime')
@@ -89,7 +91,7 @@ def create_app(env_name):
             json_abort("Resource not found", 404)
         json_abort("starttime and endtime params required", 422)
 
-    @app.route('/v1.0/event/<int:event_id>', methods=['GET'])
+    @app.route('/api/v1.0/event/<int:event_id>', methods=['GET'])
     def get_event(event_id):
         '''Description: Get event by id, or find the latest with event_id =0
 
@@ -98,8 +100,8 @@ def create_app(env_name):
             Required Params:
                 id
             Returns:single event
-            Example:/v1.0/event/123
-                    /v1.0/event/0 (latest
+            Example:/api/v1.0/event/123
+                    /api/v1.0/event/0 (latest
         '''
 
         if(event_id == 0):
@@ -110,16 +112,16 @@ def create_app(env_name):
             return jsonify(event.to_dictionary())
         json_abort("Resource not found", 404)
 
-    @app.route('/v1.0/day_counts', methods=['GET'])
+    @app.route('/api/v1.0/day_counts', methods=['GET'])
     def day_counts():
         '''Description: Get counts for each day of tremor
 
-            Route: /v1.0/day_count
+            Route: /api/v1.0/day_count
             Method: GET
             Required Params:
                 None
             Returns:collection of tuples
-            Example:/v1.0/day_count
+            Example:/api/v1.0/day_count
         '''
         events = Event.day_count()
         collection = {}
@@ -131,7 +133,7 @@ def create_app(env_name):
         return jsonify(collection)
 
     @require_apikey
-    @app.route('/v1.0/event/new', methods=['POST'])
+    @app.route('/api/v1.0/event/new', methods=['POST'])
     def event_new():
         pass
 
