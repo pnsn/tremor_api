@@ -9,6 +9,8 @@ from flask_csv import send_csv
 
 from .config import app_config
 from functools import wraps
+from io import StringIO
+
 
 
 db = SQLAlchemy()
@@ -121,7 +123,8 @@ def create_app(env_name):
                                   'created_at', 'num_stas', 'time',
                                   'catalog_version']
                     filename = 'events.csv'
-                    return send_csv(data, filename, fieldnames)
+                    with StringIO as data:
+                        return send_csv(data, filename, fieldnames)
                 else:
                     geo_json = export_to_geojson(events)
                     return geo_json
