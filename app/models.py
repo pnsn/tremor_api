@@ -48,7 +48,7 @@ class Event(db.Model):
 
     @classmethod
     def get_all(self):
-        return self.query.all().order_by('time desc').limit(50000)
+        return self.query.all().order_by(self.time.desc()).limit(50000)
 
     @classmethod
     def get_id(self, id):
@@ -56,7 +56,7 @@ class Event(db.Model):
 
     @classmethod
     def get_latest(self):
-        return self.query.order_by('time desc').limit(1).one()
+        return self.query.order_by(self.time.desc()).limit(1).one()
 
     @classmethod
     def filter_by_date(self, starttime, endtime):
