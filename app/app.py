@@ -122,9 +122,9 @@ def create_app(env_name):
                                   'created_at', 'num_stas', 'time',
                                   'catalog_version']
                     csv_io = io.StringIO()
-                    csv_io.write(str(','.join(fieldnames) + " \n ", 'utf-8'))
+                    csv_io.write(str(','.join(fieldnames) + " \n "))
                     for e in events:
-                        csv_io.write(str("{}, {}, {}, {}, {}, {}, {}, {}, {} \n ", 'utf-8')
+                        csv_io.write(str("{}, {}, {}, {}, {}, {}, {}, {}, {} \n ")
                                      .format(e.id, e.lat, e.lon, e.depth,
                                              e.amplitude, e.created_at,
                                              e.num_stas, e.time,
