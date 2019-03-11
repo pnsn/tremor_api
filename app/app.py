@@ -115,6 +115,8 @@ def create_app(env_name):
                 endtime and endtime is not None:
             events = Event.filter_by_date(starttime, endtime)
             if len(events.all()) > 0:
+                # NOTE, this currenlty does not work since mod_wsgi was built
+                # against python 2.7 on web3
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
@@ -124,13 +126,14 @@ def create_app(env_name):
                     csv_io = io.StringIO()
                     csv_io.write(str(','.join(fieldnames) + " \n "))
                     for e in events:
-                        csv_io.write(str("{}, {}, {}, {}, {}, {}, {}, {}, {} \n ")
-                                     .format(e.id, e.lat, e.lon, e.depth,
-                                             e.amplitude, e.created_at,
-                                             e.num_stas, e.time,
-                                             e.catalog_version
-                                             )
-                                     )
+                        csv_io.write(
+                            str("{}, {}, {}, {}, {}, {}, {}, {}, {} \n ")
+                            .format(e.id, e.lat, e.lon, e.depth,
+                                    e.amplitude, e.created_at,
+                                    e.num_stas, e.time,
+                                    e.catalog_version
+                                    )
+                        )
                     response = Response(csv_io.getvalue(), mimetype='text/csv')
                     response.headers.set('Content-Disposition', 'attachment',
                                          filename=filename)

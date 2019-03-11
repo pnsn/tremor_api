@@ -56,7 +56,7 @@ class Event(db.Model):
 
     @classmethod
     def get_latest(self):
-        return self.query.order_by('created_at desc').limit(1).one()
+        return self.query.order_by('time desc').limit(1).one()
 
     @classmethod
     def filter_by_date(self, starttime, endtime):
