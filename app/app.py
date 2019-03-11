@@ -1,15 +1,15 @@
 '''
 Where all the magic happens again, and again and again
 '''
-from flask import request, abort, Flask, make_response, jsonify
+from flask import request, abort, Flask, make_response, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_caching import Cache
 from flask_cors import CORS
-from flask_csv import send_csv
+# from flask_csv import send_csv
 
 from .config import app_config
 from functools import wraps
-from io import StringIO
+import io
 
 
 
@@ -110,21 +110,31 @@ def create_app(env_name):
         '''
         starttime = request.args.get('starttime')
         endtime = request.args.get('endtime')
-        format = request.args.get('type')
+        format = request.args.get('format')
         if starttime and starttime is not None and \
                 endtime and endtime is not None:
             events = Event.filter_by_date(starttime, endtime)
             if len(events.all()) > 0:
                 if format == 'csv':
-                    data = [e.to_dictionary() for e in events]
-                    print("ready")
-                    print(data)
+                    filename = "tremor_events-{}-{}.csv".format(starttime,
+                                                                endtime)
                     fieldnames = ['id', 'lat', 'lon', 'depth', 'amplitude',
                                   'created_at', 'num_stas', 'time',
                                   'catalog_version']
-                    filename = 'events.csv'
-                    with StringIO as data:
-                        return send_csv(data, filename, fieldnames)
+                    csv_io = io.StringIO()
+                    csv_io.write(','.join(fieldnames) + " \n ")
+                    for e in events:
+                        csv_io.write("{}, {}, {}, {}, {}, {}, {}, {}, {} \n "
+                                     .format(e.id, e.lat, e.lon, e.depth,
+                                             e.amplitude, e.created_at,
+                                             e.num_stas, e.time,
+                                             e.catalog_version
+                                             )
+                                     )
+                    response = Response(csv_io.getvalue(), mimetype='text/csv')
+                    response.headers.set('Content-Disposition', 'attachment',
+                                         filename=filename)
+                    return response
                 else:
                     geo_json = export_to_geojson(events)
                     return geo_json
