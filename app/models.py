@@ -46,9 +46,12 @@ class Event(db.Model):
         self.amplitude = amplitude
         self.catalog_version = catalog_version
 
+    RETURN_LIMIT = 50000
+
     @classmethod
     def get_all(self):
-        return self.query.all().order_by(self.time.desc()).limit(50000)
+        return self.query.all().order_by(self.time.desc())\
+            .limit(self.RETURN_LIMIT)
 
     @classmethod
     def get_id(self, id):
@@ -61,7 +64,7 @@ class Event(db.Model):
     @classmethod
     def filter_by_date(self, starttime, endtime):
         return self.query.filter(self.time.between(starttime, endtime))\
-            .order_by(self.time)
+            .order_by(self.time).limit(self.RETURN_LIMIT)
 
     @classmethod
     def day_count(self):
