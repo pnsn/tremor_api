@@ -88,9 +88,9 @@ def create_app(env_name):
 
     def create_geojson_feature(obj):
         feature = {}
-        feature['latitude'] = obj.lat
-        feature['longitude'] = obj.lon
-        feature['amplitude'] = obj.amplitude
+        feature['lat'] = obj.lat
+        feature['lon'] = obj.lon
+        feature['amp'] = obj.amplitude
         feature['time'] = obj.time
         feature['id'] = obj.id
         return feature
