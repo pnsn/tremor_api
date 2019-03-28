@@ -47,10 +47,19 @@ def create_app(env_name):
         return abort(make_response(jsonify(message=message), code))
 
     def export_to_geojson(collection):
-        '''take collection of events and create geojson python dict and jsonify
+        '''take collection of events and create json
 
 
-        {
+        {   
+            {
+                "time" : string,
+                "longitude" : lon,
+                "latitude"  : lat,
+                "amplitude" : float,
+                "id" : integer
+            },
+            ...
+        }
             "type": "FeatureCollection",
             "features": [
                 {
@@ -70,7 +79,6 @@ def create_app(env_name):
             }
         '''
         geo_dict = {}
-        geo_dict['type'] = "FeatureCollection"
         geo_dict['features'] = []
         for event in collection:
             feature = create_geojson_feature(event)
@@ -79,16 +87,11 @@ def create_app(env_name):
 
     def create_geojson_feature(obj):
         feature = {}
-        feature['type'] = 'Feature'
-        feature['geometry'] = {}
-        feature['geometry']['type'] = 'Point'
-        feature['geometry']['coordinates'] = [obj.lon, obj.lat]
-        feature['properties'] = {}
-        feature['properties']['depth'] = obj.depth
-        feature['properties']['amplitude'] = obj.amplitude
-        feature['properties']['num_stas'] = obj.num_stas
-        feature['properties']['time'] = obj.time
-        feature['properties']['id'] = obj.id
+        feature['latitude'] = obj.lat
+        feature['longitude'] = obj.lon
+        feature['amplitude'] = obj.amplitude
+        feature['time'] = obj.time
+        feature['id'] = obj.id
         return feature
 
     # ##################ROUTES##########################################
