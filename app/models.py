@@ -46,7 +46,7 @@ class Event(db.Model):
         self.amplitude = amplitude
         self.catalog_version = catalog_version
 
-    RETURN_LIMIT = 50000
+    RETURN_LIMIT = 1000000
 
     @classmethod
     def get_all(self):

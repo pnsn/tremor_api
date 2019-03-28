@@ -29,6 +29,7 @@ def create_app(env_name):
     Cache(app, cache_config)
     CORS(app, resources=r'/api/v1.0/*')
     db.init_app(app)
+    print(app.config['SQLALCHEMY_DATABASE_URI'])
     # cache.init_app(app)
 
     def require_apikey(view_function):
