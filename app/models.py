@@ -46,25 +46,46 @@ class Event(db.Model):
         self.amplitude = amplitude
         self.catalog_version = catalog_version
 
+<<<<<<< Updated upstream
     RETURN_LIMIT = 1000000
 
     @classmethod
     def get_all(self):
         return self.query.all().order_by(self.time.desc())\
             .limit(self.RETURN_LIMIT)
+=======
+    RETURN_LIMIT = 20000
+>>>>>>> Stashed changes
 
     @classmethod
     def get_id(self, id):
+        '''get event by id'''
         return self.query.get(id)
 
     @classmethod
     def get_latest(self):
+        '''return latest event'''
         return self.query.order_by(self.time.desc()).limit(1).one()
 
     @classmethod
     def filter_by_date(self, starttime, endtime):
+        '''the main query for all date filtering'''
         return self.query.filter(self.time.between(starttime, endtime))\
-            .order_by(self.time).limit(self.RETURN_LIMIT)
+            .order_by(self.time)
+
+    @classmethod
+    def filter_by_date_order_by_loc(self, starttime, endtime):
+        ''''find all by date order by lat. This probably won't be used'''
+        return self.query.filter(self.time.between(starttime, endtime))\
+            .order_by(self.lat.desc()).limit(self.RETURN_LIMIT)
+
+    @classmethod
+    def select_random(self):
+        '''select random with limit
+
+            This reduces overhead of large queries.
+        '''
+        return self.query.order_by(db.func.random()).limit(self.RETURN_LIMIT)
 
     @classmethod
     def day_count(self):
@@ -79,10 +100,12 @@ class Event(db.Model):
                          .group_by('day').all()
 
     def delete(self):
+        '''delete an event'''
         db.session.delete(self)
         db.session.commit()
 
     def save(self):
+        '''save event'''
         db.session.add(self)
         db.session.commit()
 
@@ -93,4 +116,5 @@ class Event(db.Model):
         return d
 
     def __repr__(self):
+        '''string repr of object'''
         return "<Event: {}>".format(self.id)

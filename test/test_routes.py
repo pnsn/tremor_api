@@ -41,23 +41,25 @@ def init_database(request):
     db.create_all()
     date1 = "2018-01-01"
     date2 = "2018-01-02"
-    lat = 45.0
-    lon = -122.0
+    lat1 = 45.0
+    lat2 = 48.0
+    lon1 = -122.0
+    lon2 = -116.0
     depth = 2.0
     num_stas = 3
     amplitude = 2.0
 
     # lat, lon, depth, num_stas, time, amplitude, catalog_version=None
     for _ in range(5):
-        event = Event(lat, lon, depth, num_stas, date1, amplitude,
+        event = Event(lat1, lon1, depth, num_stas, date1, amplitude,
                       catalog_version)
         event.save()
     for _ in range(5):
-        event = Event(lat, lon, depth, num_stas, date2, amplitude,
+        event = Event(lat2, lon2, depth, num_stas, date2, amplitude,
                       catalog_version)
         event.save()
     # now a late one:
-    event = Event(lat, lon, depth, num_stas, "2019-01-01", amplitude,
+    event = Event(lat1, lon1, depth, num_stas, "2019-01-01", amplitude,
                   catalog_version)
     event.save()
     yield db  # all magic goes here
@@ -88,7 +90,7 @@ def test_get_event(test_client, init_database):
     assert len(json['features']) == 5
     assert response.status_code == 200
     # find some id to test
-    print(json)
+    # print(json)
 
     id = json['features'][0]['properties']['id']
 
@@ -98,9 +100,21 @@ def test_get_event(test_client, init_database):
     assert json['properties']['id'] == id
 
 
+def test_random_select(test_client):
+    pass
+
+
 def test_day_count(test_client, init_database):
     uri = "/api/v1.0/day_counts"
     response = test_client.get(uri)
     assert response.status_code == 200
     js = response.get_json()
     assert len(js) == 3
+
+
+def test_event_matrix(test_client):
+    uri = "/api/v1.0/event_matrix?starttime=2018-01-01&endtime=2018-01-01"
+    response = test_client.get(uri)
+    json = response.get_json()
+    assert len(json['event_matrix']) > 0
+    assert response.status_code == 200

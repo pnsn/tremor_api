@@ -11,10 +11,7 @@ from .config import app_config
 from functools import wraps
 import io
 
-
-
 db = SQLAlchemy()
-
 
 def create_app(env_name):
     from .models import Event
@@ -48,19 +45,9 @@ def create_app(env_name):
         return abort(make_response(jsonify(message=message), code))
 
     def export_to_geojson(collection):
-        '''take collection of events and create json
+        '''take collection of events and create geojson python dict and jsonify
 
-
-        {   
-            {
-                "time" : string,
-                "longitude" : lon,
-                "latitude"  : lat,
-                "amplitude" : float,
-                "id" : integer
-            },
-            ...
-        }
+        {
             "type": "FeatureCollection",
             "features": [
                 {
@@ -78,8 +65,10 @@ def create_app(env_name):
                 },
                 ...
             }
-        '''
+            '''
+
         geo_dict = {}
+        geo_dict['type'] = "FeatureCollection"
         geo_dict['features'] = []
         for event in collection:
             feature = create_geojson_feature(event)
@@ -88,13 +77,17 @@ def create_app(env_name):
 
     def create_geojson_feature(obj):
         feature = {}
-        feature['lat'] = obj.lat
-        feature['lon'] = obj.lon
-        feature['amp'] = obj.amplitude
-        feature['time'] = obj.time
-        feature['id'] = obj.id
+        feature['type'] = 'Feature'
+        feature['geometry'] = {}
+        feature['geometry']['type'] = 'Point'
+        feature['geometry']['coordinates'] = [obj.lon, obj.lat]
+        feature['properties'] = {}
+        feature['properties']['depth'] = obj.depth
+        feature['properties']['amplitude'] = obj.amplitude
+        feature['properties']['num_stas'] = obj.num_stas
+        feature['properties']['time'] = obj.time
+        feature['properties']['id'] = obj.id
         return feature
-
     # ##################ROUTES##########################################
 
     @app.route('/api/v1.0/events', methods=['GET'])
@@ -115,9 +108,20 @@ def create_app(env_name):
         starttime = request.args.get('starttime')
         endtime = request.args.get('endtime')
         format = request.args.get('format')
+        lat_min = request.args.get('lat_min')
+        lat_max = request.args.get('lat_max')
+        lon_min = request.args.get('lon_min')
+        lon_max = request.args.get('lon_max')
         if starttime and starttime is not None and \
                 endtime and endtime is not None:
             events = Event.filter_by_date(starttime, endtime)
+
+            # if lat_min and lat_min is not None and lat_max and \
+            #         lat_max is not None and lon_min and lon_min is not None \
+            #         and lon_max and lon_max is not None:
+            #         events = Event.filter_by_lat_lon(lat_min, lat_max, lon_min,
+            #                                          lon_max)
+
             if len(events.all()) > 0:
                 # NOTE, this currenlty does not work since mod_wsgi was built
                 # against python 2.7 on web3
@@ -189,6 +193,35 @@ def create_app(env_name):
             collection[key] = val
             # collection.append({key: val})
         return jsonify(collection)
+
+    @app.route('/api/v1.0/event_matrix', methods=['GET'])
+    def event_matrix():
+        '''Description: Get all tremor events in time period
+
+            Route: /api/v1.0/event_matrix
+            Method: GET
+            Required Params:
+                starttime: string time stamp,
+                stoptime: string time stamp,
+            Returns: 2-dim list of lat,lon pairs
+            Example:/api/v1.0/event_matrix?&start=2018-01-01&end=2018-01-02
+        '''
+        starttime = request.args.get('starttime')
+        endtime = request.args.get('endtime')
+        if starttime and starttime is not None and \
+                endtime and endtime is not None:
+            events = Event.filter_by_date(starttime, endtime)
+            if len(events.all()) > 0:
+                dict = {}
+                dict['event_matrix'] = []
+                for event in events:
+                    dict['event_matrix'].append([event.lat, event.lon])
+                return jsonify(dict)
+            json_abort("Resource not found", 404)
+        json_abort("starttime and endtime params required", 422)
+
+
+
 
     @require_apikey
     @app.route('/api/v1.0/event/new', methods=['POST'])
