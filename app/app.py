@@ -136,7 +136,8 @@ def create_app(env_name):
                         Event.lon.between(lon_min, lon_max))
             # take a random subset of query
             events = events.order_by(
-                db.func.random()).limit(Event.RETURN_LIMIT)
+                db.func.random()).order_by(Event.time.asc()).limit(
+                    Event.RETURN_LIMIT)
             if len(events.all()) > 0:
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
