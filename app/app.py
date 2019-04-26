@@ -13,6 +13,7 @@ import io
 
 db = SQLAlchemy()
 
+
 def create_app(env_name):
     from .models import Event
     app = Flask(__name__)
@@ -26,7 +27,6 @@ def create_app(env_name):
     Cache(app, cache_config)
     CORS(app, resources=r'/api/v1.0/*')
     db.init_app(app)
-    print(app.config['SQLALCHEMY_DATABASE_URI'])
     # cache.init_app(app)
 
     def require_apikey(view_function):
@@ -88,6 +88,7 @@ def create_app(env_name):
         feature['properties']['time'] = obj.time
         feature['properties']['id'] = obj.id
         return feature
+
     # ##################ROUTES##########################################
 
     @app.route('/api/v1.0/events', methods=['GET'])
@@ -102,8 +103,16 @@ def create_app(env_name):
             Required Params:
                 start: string time stamp,
                 stop: string time stamp,
+            Optional Params:
+                lat_min: float
+                lat_max: float
+                lon_min: float
+                lon_max: float
             Returns: list of events [{event1},{event2},...,{eventn}] or 404
-            Example:/api/v1.0/events?&start=2018-01-01&end=2018-01-02
+            Examples:
+            /api/v1.0/events?&start=2018-01-01&end=2018-01-02
+            /api/v1.0/events?&start=2018-01-01&end=2018-01-02&lat_min=40& \
+            lat_max=48&lon_min=-120&lon_max=-116
         '''
         starttime = request.args.get('starttime')
         endtime = request.args.get('endtime')
@@ -114,17 +123,21 @@ def create_app(env_name):
         lon_max = request.args.get('lon_max')
         if starttime and starttime is not None and \
                 endtime and endtime is not None:
-            events = Event.filter_by_date(starttime, endtime)
 
-            # if lat_min and lat_min is not None and lat_max and \
-            #         lat_max is not None and lon_min and lon_min is not None \
-            #         and lon_max and lon_max is not None:
-            #         events = Event.filter_by_lat_lon(lat_min, lat_max, lon_min,
-            #                                          lon_max)
+            # start by calling with class
+            events = Event.query.filter(Event.time.between(starttime, endtime))
 
+            if lat_min and lat_min is not None and lat_max and \
+                    lat_max is not None and lon_min and lon_min is not None \
+                    and lon_max and lon_max is not None:
+                    # to chain, use returned collection to continue filtering
+                    events = events.filter(
+                        Event.lat.between(lat_min, lat_max)).filter(
+                        Event.lon.between(lon_min, lon_max))
+            # take a random subset of query
+            events = events.order_by(
+                db.func.random()).limit(Event.RETURN_LIMIT)
             if len(events.all()) > 0:
-                # NOTE, this currenlty does not work since mod_wsgi was built
-                # against python 2.7 on web3
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
@@ -193,35 +206,6 @@ def create_app(env_name):
             collection[key] = val
             # collection.append({key: val})
         return jsonify(collection)
-
-    @app.route('/api/v1.0/event_matrix', methods=['GET'])
-    def event_matrix():
-        '''Description: Get all tremor events in time period
-
-            Route: /api/v1.0/event_matrix
-            Method: GET
-            Required Params:
-                starttime: string time stamp,
-                stoptime: string time stamp,
-            Returns: 2-dim list of lat,lon pairs
-            Example:/api/v1.0/event_matrix?&start=2018-01-01&end=2018-01-02
-        '''
-        starttime = request.args.get('starttime')
-        endtime = request.args.get('endtime')
-        if starttime and starttime is not None and \
-                endtime and endtime is not None:
-            events = Event.filter_by_date(starttime, endtime)
-            if len(events.all()) > 0:
-                dict = {}
-                dict['event_matrix'] = []
-                for event in events:
-                    dict['event_matrix'].append([event.lat, event.lon])
-                return jsonify(dict)
-            json_abort("Resource not found", 404)
-        json_abort("starttime and endtime params required", 422)
-
-
-
 
     @require_apikey
     @app.route('/api/v1.0/event/new', methods=['POST'])
