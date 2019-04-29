@@ -73,6 +73,9 @@ def create_app(env_name):
         for event in collection:
             feature = create_geojson_feature(event)
             geo_dict['features'].append(feature)
+        # sort features by time for Kyla
+        geo_dict['features'] \
+            .sort(key=lambda feature: feature['properties']['time'])
         return jsonify(geo_dict)
 
     def create_geojson_feature(obj):

@@ -82,7 +82,7 @@ def test_get_event(test_client, init_database):
     # not found
     uri = events_uri + "?starttime=2000-01-01&endtime=2000-01-02"
     response = test_client.get(uri)
-    print(response.get_json())
+    # print(response.get_json())
     assert response.status_code == 404
 
     # success
