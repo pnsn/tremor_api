@@ -44,11 +44,15 @@ def create_app(env_name):
     def json_abort(message, code):
         return abort(make_response(jsonify(message=message), code))
 
-    def export_to_geojson(collection):
+    def export_to_geojson(collection, count):
         '''take collection of events and create geojson python dict and jsonify
+
+            count attribute is the total that would be returned before limit is
+            is applied.
 
         {
             "type": "FeatureCollection",
+            "count": count (int)
             "features": [
                 {
                   "type": "Feature",
@@ -69,6 +73,7 @@ def create_app(env_name):
 
         geo_dict = {}
         geo_dict['type'] = "FeatureCollection"
+        geo_dict['count'] = count
         geo_dict['features'] = []
         for event in collection:
             feature = create_geojson_feature(event)
@@ -83,7 +88,8 @@ def create_app(env_name):
         feature['type'] = 'Feature'
         feature['geometry'] = {}
         feature['geometry']['type'] = 'Point'
-        feature['geometry']['coordinates'] = [obj.lon, obj.lat]
+        feature['geometry']['coordinates'] = [round(obj.lon, 3),
+                                              round(obj.lat, 3)]
         feature['properties'] = {}
         feature['properties']['depth'] = obj.depth
         feature['properties']['amplitude'] = obj.amplitude
@@ -138,9 +144,10 @@ def create_app(env_name):
                         Event.lat.between(lat_min, lat_max)).filter(
                         Event.lon.between(lon_min, lon_max))
             # take a random subset of query
-            events = events.order_by(
+            random_events = events.order_by(
                 db.func.random()).limit(Event.RETURN_LIMIT)
-            if len(events.all()) > 0:
+            if len(random_events.all()) > 0:
+                count = events.count()
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
@@ -149,7 +156,7 @@ def create_app(env_name):
                                   'catalog_version']
                     csv_io = io.StringIO()
                     csv_io.write(str(','.join(fieldnames) + " \n "))
-                    for e in events:
+                    for e in random_events:
                         csv_io.write(
                             str("{}, {}, {}, {}, {}, {}, {}, {}, {} \n ")
                             .format(e.id, e.lat, e.lon, e.depth,
@@ -163,7 +170,7 @@ def create_app(env_name):
                                          filename=filename)
                     return response
                 else:
-                    geo_json = export_to_geojson(events)
+                    geo_json = export_to_geojson(random_events, count)
                     return geo_json
             json_abort("Resource not found", 404)
         json_abort("starttime and endtime params required", 422)
@@ -198,10 +205,21 @@ def create_app(env_name):
             Method: GET
             Required Params:
                 None
+            Optional Params:
+                lat_min: float
+                lat_max: float
+                lon_min: float
+                lon_max: float
             Returns:collection of tuples
             Example:/api/v1.0/day_count
         '''
-        events = Event.day_count()
+
+        lat_min = request.args.get('lat_min')
+        lat_max = request.args.get('lat_max')
+        lon_min = request.args.get('lon_min')
+        lon_max = request.args.get('lon_max')
+
+        events = Event.day_count(lat_min, lat_max, lon_min, lon_max)
         collection = {}
         for e in events:
             key = e[0].strftime("%Y-%m-%d")

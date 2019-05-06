@@ -59,16 +59,22 @@ class Event(db.Model):
         return self.query.order_by(self.time.desc()).limit(1).one()
 
     @classmethod
-    def day_count(self):
+    def day_count(self, lat_min=None, lat_max=None,
+                  lon_min=None, lon_max=None):
         '''request number of events per day
 
         with_entities() returns tuple and not query object of Events
         '''
 
-        return self.query.with_entities(db.func.date_trunc('day', self.time)
-                                        .label('day'),
-                                        db.func.count(self.time))\
-                         .group_by('day').all()
+        events = self.query.with_entities(db.func.date_trunc('day', self.time)
+                                          .label('day'),
+                                          db.func.count(self.time))
+        if lat_min is not None and lat_max is not None \
+           and lon_min is not None and lon_max is not None:
+            events = events.filter(
+                Event.lat.between(lat_min, lat_max)).filter(
+                Event.lon.between(lon_min, lon_max))
+        return events.group_by('day').all()
 
     def delete(self):
         '''delete an event'''

@@ -107,6 +107,12 @@ def test_day_count(test_client, init_database):
     assert response.status_code == 200
     js = response.get_json()
     assert len(js) == 3
+    uri = "/api/v1.0/day_counts?lat_min=44.9&lat_max=45.1" + \
+          "&lon_min=-122.1&lon_max=-121.9"
+    response = test_client.get(uri)
+    assert response.status_code == 200
+    js = response.get_json()
+    assert len(js) == 2
 
 
 def test_lat_lon_select(test_client):
@@ -148,5 +154,6 @@ def test_random_select(test_client):
         uri = "/api/v1.0/events?starttime=2000-01-01&endtime=2040-01-01"
         response = test_client.get(uri)
         json = response.get_json()
+        assert json['count'] == 11
         assert len(json['features']) == 2
         assert response.status_code == 200
