@@ -2,6 +2,6 @@ language: python
 python:
   - "3.6"
 script:
-  - python setup.py
+  - python setup.py install
   - pip install -r requirements/production.txt
   - pytest
