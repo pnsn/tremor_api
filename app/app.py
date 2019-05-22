@@ -24,7 +24,7 @@ def create_app(env_name):
         'CACHE_DEFAULT_TIMEOUT': app.config["CACHE_DEFAULT_TIMEOUT"],
         'CACHE_DIR': app.config["CACHE_DIR"],
         'CACHE_THRESHOLD': app.config["CACHE_THRESHOLD"]}
-    Cache(app, cache_config)
+    cache = Cache(app, cache_config)
     CORS(app, resources=r'/api/v1.0/*')
     db.init_app(app)
     # cache.init_app(app)
@@ -103,7 +103,7 @@ def create_app(env_name):
     @app.route('/api/v1.0/events', methods=['GET'])
     # this is how we can cache. memoize considers params as part of key
     # otherwise use @cache.cached(...)
-    # @cache.memoize(86400)
+    @cache.memoize(86400)
     def get_events():
         '''Description: Get all tremor events in time period
 

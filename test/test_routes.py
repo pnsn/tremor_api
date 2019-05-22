@@ -2,8 +2,6 @@ import pytest
 from app.app import create_app, db
 from app.models import Event
 from unittest.mock import patch
-import csv
-import io
 
 '''
     To run all tests
