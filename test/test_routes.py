@@ -2,6 +2,8 @@ import pytest
 from app.app import create_app, db
 from app.models import Event
 from unittest.mock import patch
+import csv
+import io
 
 '''
     To run all tests
@@ -156,4 +158,9 @@ def test_random_select(test_client):
         json = response.get_json()
         assert json['count'] == 11
         assert len(json['features']) == 2
+        assert response.status_code == 200
+        # test with format = csv should return all 11
+        uri = "/api/v1.0/events?starttime=2000-01-01&endtime=2040-01-01&" + \
+              "format=csv"
+        response = test_client.get(uri)
         assert response.status_code == 200

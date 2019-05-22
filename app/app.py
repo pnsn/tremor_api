@@ -143,18 +143,19 @@ def create_app(env_name):
                     events = events.filter(
                         Event.lat.between(lat_min, lat_max)).filter(
                         Event.lon.between(lon_min, lon_max))
-            # take a random subset of query
-            random_events = events.order_by(
-                db.func.random()).limit(Event.RETURN_LIMIT)
-            if len(random_events.all()) > 0:
-                count = events.count()
+            # count before trucating
+            count = events.count()
+            if format is None or format != 'csv':
+                events = events.order_by(
+                    db.func.random()).limit(Event.RETURN_LIMIT)
+            if len(events.all()) > 0:
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
                     fieldnames = ['lat', 'lon', 'depth', 'time']
                     csv_io = io.StringIO()
                     csv_io.write(str(','.join(fieldnames) + " \n "))
-                    for e in random_events:
+                    for e in events:
                         csv_io.write(
                             str("{}, {}, {}, {} \n ")
                             .format(e.lat, e.lon, e.depth, e.time)
@@ -164,7 +165,7 @@ def create_app(env_name):
                                          filename=filename)
                     return response
                 else:
-                    geo_json = export_to_geojson(random_events, count)
+                    geo_json = export_to_geojson(events, count)
                     return geo_json
             json_abort("Resource not found", 404)
         json_abort("starttime and endtime params required", 422)
