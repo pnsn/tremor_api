@@ -151,9 +151,7 @@ def create_app(env_name):
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
-                    fieldnames = ['id', 'lat', 'lon', 'depth',
-                                  'num_stas', 'time',
-                                  'catalog_version']
+                    fieldnames = ['lat', 'lon', 'depth', 'time']
                     csv_io = io.StringIO()
                     csv_io.write(str(','.join(fieldnames) + " \n "))
                     for e in random_events:
