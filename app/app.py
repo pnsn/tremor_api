@@ -158,7 +158,7 @@ def create_app(env_name):
                     csv_io.write(str(','.join(fieldnames) + " \n "))
                     for e in random_events:
                         csv_io.write(
-                            str("{}, {}, {}, {}, {}, {}, {} \n ")
+                            str("{}, {}, {}, {} \n ")
                             .format(e.lat, e.lon, e.depth, e.time)
                         )
                     response = Response(csv_io.getvalue(), mimetype='text/csv')
