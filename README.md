@@ -34,7 +34,7 @@ Uses pytest. From app root:
 # Routes
 All routes in app/app.py
 <pre>
-        Route: /v1.0/events
+        Route: /api/v1.0/events
         Description: Get all tremor events in time period
         Method: GET
         Required Params:
@@ -44,7 +44,7 @@ All routes in app/app.py
         Example:/v1.0/events?&start=2018-01-01&end=2018-01-02
 </pre>
 <pre>
-        Route: /event
+        Route: /api/v1.0/event
         Description: Get event by id, or find the latest with event_id =0
         Method: GET
         Required Params:
