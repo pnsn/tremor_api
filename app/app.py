@@ -92,7 +92,9 @@ def create_app(env_name):
                                               round(obj.lat, 3)]
         feature['properties'] = {}
         feature['properties']['depth'] = obj.depth
-        feature['properties']['amplitude'] = obj.amplitude
+        # test for NaN. A NaN does not equal itself.
+        amp = obj.amplitude if obj.amplitude == obj.amplitude else 0
+        feature['properties']['amplitude'] = amp
         feature['properties']['num_stas'] = obj.num_stas
         feature['properties']['time'] = obj.time
         feature['properties']['id'] = obj.id
@@ -139,10 +141,10 @@ def create_app(env_name):
             if lat_min and lat_min is not None and lat_max and \
                     lat_max is not None and lon_min and lon_min is not None \
                     and lon_max and lon_max is not None:
-                    # to chain, use returned collection to continue filtering
-                    events = events.filter(
-                        Event.lat.between(lat_min, lat_max)).filter(
-                        Event.lon.between(lon_min, lon_max))
+                # to chain, use returned collection to continue filtering
+                events = events.filter(
+                    Event.lat.between(lat_min, lat_max)).filter(
+                    Event.lon.between(lon_min, lon_max))
             # count before trucating
             count = events.count()
             if format is None or format != 'csv':

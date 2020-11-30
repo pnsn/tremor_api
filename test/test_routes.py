@@ -6,7 +6,7 @@ from unittest.mock import patch
 '''
     To run all tests
      pytest --verbose -s
-     -s prevents standar out capturing allowing
+     -s prevents stderr out capturing allowing
      use of print statements
     to run all module tests
      pytest test/test_routes.py
