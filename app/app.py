@@ -3,7 +3,6 @@ Where all the magic happens again, and again and again
 '''
 from flask import request, abort, Flask, make_response, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
-from flask_caching import Cache
 from flask_cors import CORS
 # from flask_csv import send_csv
 
@@ -19,15 +18,10 @@ def create_app(env_name):
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    cache_config = {
-        'CACHE_TYPE': app.config["CACHE_TYPE"],
-        'CACHE_DEFAULT_TIMEOUT': app.config["CACHE_DEFAULT_TIMEOUT"],
-        'CACHE_DIR': app.config["CACHE_DIR"],
-        'CACHE_THRESHOLD': app.config["CACHE_THRESHOLD"]}
-    cache = Cache(app, cache_config)
+
     CORS(app, resources=r'/api/v1.0/*')
     db.init_app(app)
-    # cache.init_app(app)
+    # f.init_app(app)
 
     def require_apikey(view_function):
         @wraps(view_function)
@@ -103,9 +97,6 @@ def create_app(env_name):
     # ##################ROUTES##########################################
 
     @app.route('/api/v1.0/events', methods=['GET'])
-    # this is how we can cache. memoize considers params as part of key
-    # otherwise use @cache.cached(...)
-    @cache.memoize(86400)
     def get_events():
         '''Description: Get all tremor events in time period
 
