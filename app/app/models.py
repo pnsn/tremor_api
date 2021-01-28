@@ -15,6 +15,7 @@ class Event(db.Model):
      created_at      | timestamp without time zone | default now()
      time            | timestamp without time zone |
      catalog_version | integer                     |
+     magnitude       | numeric
     Indexes:
         "events_catalog_version_idx" btree (catalog_version)
         "events_created_at_idx" btree (created_at)
@@ -31,12 +32,13 @@ class Event(db.Model):
     depth = db.Column(db.Float)
     num_stas = db.Column(db.Float)
     amplitude = db.Column(db.Float)
+    magnitude = db.Column(db.Float)
     time = db.Column(db.DateTime)
     catalog_version = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __init__(self, lat, lon, depth, num_stas, time, amplitude=None,
-                 catalog_version=None):
+                 magnitude=None, catalog_version=None):
         """initialize with name."""
         self.lat = lat
         self.lon = lon
@@ -44,6 +46,7 @@ class Event(db.Model):
         self.num_stas = num_stas
         self.time = time
         self.amplitude = amplitude
+        self.magnitude = magnitude
         self.catalog_version = catalog_version
 
     RETURN_LIMIT = 20000

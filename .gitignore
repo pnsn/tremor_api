@@ -13,6 +13,4 @@ lib
 lib64
 __pycache__
 .env
-public/cache/*
-!public/cache/.gitkeep
 .vscode

@@ -34,23 +34,23 @@ Uses pytest. From app root:
 # Routes
 All routes in app/app.py
 <pre>
-        Route: /api/v1.0/events
+        Route: /api/v3.0/events
         Description: Get all tremor events in time period
         Method: GET
         Required Params:
             start:time stamp (string),
             stop: time stamp (string),
         Returns: list of events [{event1},{event2},...,{eventn}] or 404
-        Example:/v1.0/events?&start=2018-01-01&end=2018-01-02
+        Example:/v3.0/events?&start=2018-01-01&end=2018-01-02
 </pre>
 <pre>
-        Route: /api/v1.0/event
+        Route: /api/v3.0/event
         Description: Get event by id, or find the latest with event_id =0
         Method: GET
         Required Params:
             id (int)
         Returns:single event
-        Example:/v1.0/event/123
-                /v1.0/event/0 (latest)
+        Example:/v3.0/event/123
+                /v3.0/event/0 (latest)
 
 </pre>
