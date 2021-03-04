@@ -1,5 +1,5 @@
 import os
-from app.app import create_app
+from tremor_api.app import create_app
 # from dotenv import load_dotenvs
 
 # load the .env file

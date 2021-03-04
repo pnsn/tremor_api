@@ -16,7 +16,6 @@ db = SQLAlchemy()
 def create_app(env_name):
     from .models import Event
     app = Flask(__name__)
-
     app.config.from_object(app_config[env_name])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     CORS(app, resources=r'/api/v3.0/*')
