@@ -1,10 +1,9 @@
 import pytest
 from app.app import create_app, db
 from app.models import Event
-from unittest.mock import patch
 
 '''
-    To run all tests
+    To run all testse
      pytest --verbose -s
      -s prevents stderr out capturing allowing
      use of print statements
@@ -20,10 +19,6 @@ from unittest.mock import patch
     yield is where the magic happens
 
 '''
-# set high catalog_version to identify test data
-catalog_version = 100000
-
-
 @pytest.fixture(scope='module')
 def test_client():
     flask_app = create_app('testing')
@@ -42,6 +37,7 @@ def init_database(request):
     db.create_all()
     date1 = "2018-01-01"
     date2 = "2018-03-02"
+    date3 = "2021-03-08"
     lat1 = 45.0
     lat2 = 48.0
     lon1 = -122.0
@@ -49,20 +45,35 @@ def init_database(request):
     depth = 2.0
     num_stas = 3
     amplitude = 2.0
+    magnitude = 1.0
 
-    # lat, lon, depth, num_stas, time, amplitude, catalog_version=None
-    for _ in range(5):
-        event = Event(lat1, lon1, depth, num_stas, date1, amplitude,
-                      catalog_version)
+    ''' stub out some test data
+    # for each catalog version 1-3
+       * create 5 events with date 1
+       * create 5 events with date 2
+       * add on single event with date3
+
+    Since catalog 2 is deprecated, model is scoped to return
+    on only 1 & 3
+    so official:
+    date1: 10 events
+    date2: 10 events
+    date3: 2 events
+
+    '''
+    for version in [1, 2, 3]:
+        for _ in range(5):
+            event = Event(lat1, lon1, depth, num_stas, date1, version,
+                          amplitude, magnitude)
+            event.save()
+        for _ in range(5):
+            event = Event(lat2, lon2, depth, num_stas, date2, version,
+                          amplitude, magnitude)
+            event.save()
+        # now a late one:
+        event = Event(lat1, lon1, depth, num_stas, date3, version,
+                      amplitude, magnitude)
         event.save()
-    for _ in range(5):
-        event = Event(lat2, lon2, depth, num_stas, date2, amplitude,
-                      catalog_version)
-        event.save()
-    # now a late one:
-    event = Event(lat1, lon1, depth, num_stas, "2019-01-01", amplitude,
-                  catalog_version)
-    event.save()
     yield db  # all magic goes here
 
 
@@ -88,8 +99,10 @@ def test_get_event(test_client, init_database):
     # success
     uri = events_uri + "?starttime=2018-01-01&endtime=2018-01-01"
     response = test_client.get(uri)
+    print(response)
     json = response.get_json()
-    assert len(json['features']) == 5
+    print(json)
+    assert len(json['features']) == 10
     assert response.status_code == 200
     # find some id to test
 
@@ -116,20 +129,27 @@ def test_day_count(test_client, init_database):
 
 
 def test_lat_lon_select(test_client):
-    '''test selecting by lat/lon'''
+    '''test selecting by lat/lon
+        cord 1 (count = 12)
+          lat = 45.0
+          lon = -122.0
+        cord2 (count = 10)
+          lat = 48.0
+          lon = -116.0
+    '''
     # all dates so we can test lat/lons
     uri_base = "/api/v3.0/events?starttime=2000-01-01&endtime=2040-01-01"
     # all lat/lons
     uri = uri_base + "&lat_min=30.0&lat_max=50.0&lon_min=-140.0&lon_max=-100.0"
     response = test_client.get(uri)
     json = response.get_json()
-    assert len(json['features']) == 11
+    assert len(json['features']) == 22
     assert response.status_code == 200
     # only between 40&41, -122, -120
     uri = uri_base + "&lat_min=44.0&lat_max=46.0&lon_min=-122.0&lon_max=-120.0"
     response = test_client.get(uri)
     json = response.get_json()
-    assert len(json['features']) == 6
+    assert len(json['features']) == 12
     assert response.status_code == 200
     # now should be 404
     uri = uri_base + "&lat_min=40.0&lat_max=41.0&lon_min=-122.0&lon_max=-120.0"
@@ -137,28 +157,9 @@ def test_lat_lon_select(test_client):
     json = response.get_json()
     assert response.status_code == 404
     # should only return 1
-    uri = "api/v3.0/events?starttime=2019-01-01&endtime=2019-01-02&" + \
+    uri = "api/v3.0/events?starttime=2021-03-08&endtime=2021-03-09&" + \
           "&lat_min=30.0&lat_max=50.0&lon_min=-140.0&lon_max=-100.0"
     response = test_client.get(uri)
     json = response.get_json()
-    assert len(json['features']) == 1
+    assert len(json['features']) == 2
     assert response.status_code == 200
-
-
-def test_random_select(test_client):
-    '''test that random selects limit'''
-    # mock the return limit to number lower than query
-    with patch.object(Event, "RETURN_LIMIT", 2):
-        assert Event.RETURN_LIMIT == 2
-        # all events
-        uri = "/api/v3.0/events?starttime=2000-01-01&endtime=2040-01-01"
-        response = test_client.get(uri)
-        json = response.get_json()
-        assert json['count'] == 11
-        assert len(json['features']) == 2
-        assert response.status_code == 200
-        # test with format = csv should return all 11
-        uri = "/api/v3.0/events?starttime=2000-01-01&endtime=2040-01-01&" + \
-              "format=csv"
-        response = test_client.get(uri)
-        assert response.status_code == 200

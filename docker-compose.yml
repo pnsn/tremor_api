@@ -13,9 +13,9 @@ services:
     volumes:
       - ./app:/app
     environment:
-      - TREMOR_DB_URI=postgresql://postgres:supersecret@tremorapi_dev:5432/
-      - FLASK_ENV="staging"
-      - APP_SETTINGS="staging"
+      - TREMOR_DB_URI=postgresql://postgres:supersecret@db:5432/
+      - FLASK_ENV="development"
+      - APP_SETTINGS="development"
       - FLASK_DEBUG=1
       - FLASK_APP=run.py
       - TREMOR_API_KEY=123
@@ -28,5 +28,8 @@ services:
   db:
     container_name: tremorapi_db
     image: postgres:9.2-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=supersecret
 
   
