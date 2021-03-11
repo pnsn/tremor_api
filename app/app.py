@@ -88,7 +88,8 @@ def create_app(env_name):
         # test for NaN. A NaN does not equal itself.
         amp = obj.amplitude if obj.amplitude == obj.amplitude else 0
         feature['properties']['amplitude'] = amp
-        feature['properties']['magnitude'] = round(obj.magnitude, 1)
+        if obj.magnitude is not None:
+            feature['properties']['magnitude'] = round(obj.magnitude, 1)
         feature['properties']['num_stas'] = obj.num_stas
         feature['properties']['time'] = obj.time
         feature['properties']['id'] = obj.id
