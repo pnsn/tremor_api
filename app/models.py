@@ -32,14 +32,15 @@ class Event(db.Model):
     lon = db.Column(db.Float)
     depth = db.Column(db.Float)
     num_stas = db.Column(db.Float)
-    amplitude = db.Column(db.Float)
+    energy = db.Column(db.Float)
+    duration = db.Column(db.Float)
     magnitude = db.Column(db.Float)
     time = db.Column(db.DateTime)
     catalog_version = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __init__(self, lat, lon, depth, num_stas, time, catalog_version=None,
-                 amplitude=None, magnitude=None):
+                 energy=None, duration=None, magnitude=None):
         """initialize with name."""
         self.lat = lat
         self.lon = lon
@@ -47,7 +48,8 @@ class Event(db.Model):
         self.num_stas = num_stas
         self.time = time
         self.catalog_version = catalog_version
-        self.amplitude = amplitude
+        self.energy = energy
+        self.duration = duration
         self.magnitude = magnitude
 
     RETURN_LIMIT = 20000
