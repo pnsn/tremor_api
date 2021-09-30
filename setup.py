@@ -6,8 +6,8 @@ with open("README.md", "r") as fh:
 setup(
     name="tremor_api",
     version="1.0.",
-    author="Jon Connolly",
-    author_email="joncon@uw.edu",
+    author="Kyla Marczewski",
+    author_email="marczk@uw.edu",
     description="A simple API to return GeoJSON tremor data",
     long_description=long_description,
     long_description_content_type="text/markdown",

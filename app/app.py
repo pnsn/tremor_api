@@ -55,7 +55,8 @@ def create_app(env_name):
                   },
                   "properties": {
                     "depth": float,
-                    "amplitude": float,
+                    "energy": float,
+                    "duration": float,
                     "num_stas": integer
                     "time": string
                   }
@@ -86,8 +87,12 @@ def create_app(env_name):
         feature['properties'] = {}
         feature['properties']['depth'] = obj.depth
         # test for NaN. A NaN does not equal itself.
-        amp = obj.amplitude if obj.amplitude == obj.amplitude else 0
-        feature['properties']['amplitude'] = amp
+        energy = obj.energy if obj.energy == obj.energy else 0
+        feature['properties']['energy'] = energy
+
+        duration = obj.duration if obj.energy == obj.energy else 0
+        feature['properties']['duration']= duration
+
         if obj.magnitude is not None:
             feature['properties']['magnitude'] = round(obj.magnitude, 1)
         feature['properties']['num_stas'] = obj.num_stas
@@ -130,7 +135,7 @@ def create_app(env_name):
             # start by calling with class
             events = Event.query.filter(
                      Event.time.between(starttime, endtime)).filter(
-                    Event.catalog_version != 2)
+                     (Event.catalog_version == 1) | (Event.catalog_version == 3))
 
             if lat_min and lat_min is not None and lat_max and \
                     lat_max is not None and lon_min and lon_min is not None \
@@ -148,13 +153,13 @@ def create_app(env_name):
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
-                    fieldnames = ['lat', 'lon', 'depth', 'time']
+                    fieldnames = ['lat', 'lon', 'depth', 'starttime', 'energy', 'duration']
                     csv_io = io.StringIO()
                     csv_io.write(str(','.join(fieldnames) + " \n "))
                     for e in events:
                         csv_io.write(
-                            str("{}, {}, {}, {} \n ")
-                            .format(e.lat, e.lon, e.depth, e.time)
+                            str("{}, {}, {}, {}, {}, {} \n ")
+                            .format(e.lat, e.lon, e.depth, e.time, e.energy, e.duration)
                         )
                     response = Response(csv_io.getvalue(), mimetype='text/csv')
                     response.headers.set('Content-Disposition', 'attachment',
