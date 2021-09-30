@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="MagD",
+    name="TremorApi",
     version="1.0.",
     author="Jon Connolly",
     author_email="joncon@uw.edu",
