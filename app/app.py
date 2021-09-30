@@ -92,7 +92,8 @@ def create_app(env_name):
                                               round(obj.lat, 3)]
         feature['properties'] = {}
         feature['properties']['depth'] = obj.depth
-        feature['properties']['amplitude'] = obj.amplitude
+        feature['properties']['energy'] = obj.energy
+        feature['properties']['duration'] = obj.duration
         feature['properties']['num_stas'] = obj.num_stas
         feature['properties']['time'] = obj.time
         feature['properties']['id'] = obj.id
@@ -151,18 +152,18 @@ def create_app(env_name):
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
-                    fieldnames = ['id', 'lat', 'lon', 'depth', 'amplitude',
-                                  'created_at', 'num_stas', 'starttime',
-                                  'catalog_version']
+                    fieldnames = ['id', 'lat', 'lon', 'depth', 'energy',
+                                  'duration', 'num_stas', 'starttime',
+                                  'catalog_version', 'created_at']
                     csv_io = io.StringIO()
                     csv_io.write(str(','.join(fieldnames) + " \n "))
                     for e in random_events:
                         csv_io.write(
                             str("{}, {}, {}, {}, {}, {}, {}, {}, {} \n ")
                             .format(e.id, e.lat, e.lon, e.depth,
-                                    e.amplitude, e.created_at,
+                                    e.energy, e.duration,
                                     e.num_stas, e.time,
-                                    e.catalog_version
+                                    e.catalog_version, e.created_at
                                     )
                         )
                     response = Response(csv_io.getvalue(), mimetype='text/csv')

@@ -9,7 +9,8 @@ class Event(db.Model):
     -----------------+-----------------------------+---------------
      lat             | numeric                     |
      lon             | numeric                     |
-     amplitude       | numeric                     |
+     energy          | numeric                     |
+     duration        | numeric                     |
      depth           | numeric                     |
      num_stas        | integer                     |
      created_at      | timestamp without time zone | default now()
@@ -30,7 +31,8 @@ class Event(db.Model):
     lon = db.Column(db.Float)
     depth = db.Column(db.Float)
     num_stas = db.Column(db.Float)
-    amplitude = db.Column(db.Float)
+    energy = db.Column(db.Float)
+    duration = db.Column(db.Float)
     time = db.Column(db.DateTime)
     catalog_version = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
