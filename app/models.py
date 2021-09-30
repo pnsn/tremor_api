@@ -15,6 +15,7 @@ class Event(db.Model):
      created_at      | timestamp without time zone | default now()
      time            | timestamp without time zone |
      catalog_version | integer                     |
+     magnitude       | numeric
     Indexes:
         "events_catalog_version_idx" btree (catalog_version)
         "events_created_at_idx" btree (created_at)
@@ -31,20 +32,22 @@ class Event(db.Model):
     depth = db.Column(db.Float)
     num_stas = db.Column(db.Float)
     amplitude = db.Column(db.Float)
+    magnitude = db.Column(db.Float)
     time = db.Column(db.DateTime)
     catalog_version = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    def __init__(self, lat, lon, depth, num_stas, time, amplitude=None,
-                 catalog_version=None):
+    def __init__(self, lat, lon, depth, num_stas, time, catalog_version=None,
+                 amplitude=None, magnitude=None):
         """initialize with name."""
         self.lat = lat
         self.lon = lon
         self.depth = depth
         self.num_stas = num_stas
         self.time = time
-        self.amplitude = amplitude
         self.catalog_version = catalog_version
+        self.amplitude = amplitude
+        self.magnitude = magnitude
 
     RETURN_LIMIT = 20000
 
@@ -56,7 +59,9 @@ class Event(db.Model):
     @classmethod
     def get_latest(self):
         '''return latest event'''
-        return self.query.order_by(self.time.desc()).limit(1).one()
+        return self.query.filter(
+            self.catalog_version != 2).order_by(
+            self.time.desc()).limit(1).one()
 
     @classmethod
     def day_count(self, lat_min=None, lat_max=None,
@@ -66,14 +71,16 @@ class Event(db.Model):
         with_entities() returns tuple and not query object of Events
         '''
 
-        events = self.query.with_entities(db.func.date_trunc('day', self.time)
-                                          .label('day'),
-                                          db.func.count(self.time))
+        events = self.query.filter(
+            self.catalog_version != 2).with_entities(
+                db.func.date_trunc('day', self.time)
+                .label('day'), db.func.count(self.time))
         if lat_min is not None and lat_max is not None \
            and lon_min is not None and lon_max is not None:
             events = events.filter(
-                Event.lat.between(lat_min, lat_max)).filter(
-                Event.lon.between(lon_min, lon_max))
+                self.catalog_version != 2).filter(
+                self.lat.between(lat_min, lat_max)).filter(
+                self.lon.between(lon_min, lon_max))
         return events.group_by('day').all()
 
     def delete(self):
