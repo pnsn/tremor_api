@@ -37,15 +37,16 @@ class Event(db.Model):
     catalog_version = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    def __init__(self, lat, lon, depth, num_stas, time, amplitude=None,
-                 catalog_version=None):
+    def __init__(self, lat, lon, depth, num_stas, time, energy=None,
+                 catalog_version=None, duration=None):
         """initialize with name."""
         self.lat = lat
         self.lon = lon
         self.depth = depth
         self.num_stas = num_stas
         self.time = time
-        self.amplitude = amplitude
+        self.energy = energy
+        self.duration = duration
         self.catalog_version = catalog_version
 
     RETURN_LIMIT = 20000

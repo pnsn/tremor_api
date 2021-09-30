@@ -62,7 +62,8 @@ def create_app(env_name):
                   },
                   "properties": {
                     "depth": float,
-                    "amplitude": float,
+                    "energy": float,
+                    "duration": float,
                     "num_stas": integer
                     "time": string
                   }
