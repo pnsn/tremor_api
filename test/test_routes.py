@@ -48,19 +48,20 @@ def init_database(request):
     lon2 = -116.0
     depth = 2.0
     num_stas = 3
-    amplitude = 2.0
+    energy = 2.0
+    duration = 2.0
 
-    # lat, lon, depth, num_stas, time, amplitude, catalog_version=None
+    # lat, lon, depth, num_stas, time, energy, duration, catalog_version=None
     for _ in range(5):
-        event = Event(lat1, lon1, depth, num_stas, date1, amplitude,
+        event = Event(lat1, lon1, depth, num_stas, date1, energy, duration,
                       catalog_version)
         event.save()
     for _ in range(5):
-        event = Event(lat2, lon2, depth, num_stas, date2, amplitude,
+        event = Event(lat2, lon2, depth, num_stas, date2, energy, duration,
                       catalog_version)
         event.save()
     # now a late one:
-    event = Event(lat1, lon1, depth, num_stas, "2019-01-01", amplitude,
+    event = Event(lat1, lon1, depth, num_stas, "2019-01-01", energy, duration,
                   catalog_version)
     event.save()
     yield db  # all magic goes here

@@ -9,7 +9,8 @@ class Event(db.Model):
     -----------------+-----------------------------+---------------
      lat             | numeric                     |
      lon             | numeric                     |
-     amplitude       | numeric                     |
+     energy          | numeric                     |
+     duration        | numeric                     |
      depth           | numeric                     |
      num_stas        | integer                     |
      created_at      | timestamp without time zone | default now()
@@ -31,14 +32,15 @@ class Event(db.Model):
     lon = db.Column(db.Float)
     depth = db.Column(db.Float)
     num_stas = db.Column(db.Float)
-    amplitude = db.Column(db.Float)
+    energy = db.Column(db.Float)
+    duration = db.Column(db.Float)
     magnitude = db.Column(db.Float)
     time = db.Column(db.DateTime)
     catalog_version = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __init__(self, lat, lon, depth, num_stas, time, catalog_version=None,
-                 amplitude=None, magnitude=None):
+                 energy=None, duration=None, magnitude=None):
         """initialize with name."""
         self.lat = lat
         self.lon = lon
@@ -46,7 +48,8 @@ class Event(db.Model):
         self.num_stas = num_stas
         self.time = time
         self.catalog_version = catalog_version
-        self.amplitude = amplitude
+        self.energy = energy
+        self.duration = duration
         self.magnitude = magnitude
 
     RETURN_LIMIT = 20000
@@ -60,7 +63,7 @@ class Event(db.Model):
     def get_latest(self):
         '''return latest event'''
         return self.query.filter(
-            self.catalog_version != 2).order_by(
+            self.catalog_version == 1 | self.catalog_version == 3).order_by(
             self.time.desc()).limit(1).one()
 
     @classmethod
@@ -72,13 +75,13 @@ class Event(db.Model):
         '''
 
         events = self.query.filter(
-            self.catalog_version != 2).with_entities(
+            self.catalog_version == 1 | self.catalog_version == 3).with_entities(
                 db.func.date_trunc('day', self.time)
                 .label('day'), db.func.count(self.time))
         if lat_min is not None and lat_max is not None \
            and lon_min is not None and lon_max is not None:
             events = events.filter(
-                self.catalog_version != 2).filter(
+                self.catalog_version == 1 | self.catalog_version == 3).filter(
                 self.lat.between(lat_min, lat_max)).filter(
                 self.lon.between(lon_min, lon_max))
         return events.group_by('day').all()

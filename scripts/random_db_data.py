@@ -18,8 +18,9 @@ with flask_app.app_context():
                 depth = random.randint(12, 24)
                 num_stas = random.randint(3, 8)
                 time = "2018-{}-{}".format(month, day)
-                amplitude = None
+                energy = None
+                duration = None
                 catalog_version = 9999
-                e = Event(lat, lon, depth, num_stas, time, amplitude,
+                e = Event(lat, lon, depth, num_stas, time, energy, duration,
                           catalog_version)
                 e.save()
