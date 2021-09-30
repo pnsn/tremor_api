@@ -1,0 +1,2 @@
+To test run in app root
+ docker-compose run --rm app sh -c "pytest"

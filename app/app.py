@@ -3,7 +3,6 @@ Where all the magic happens again, and again and again
 '''
 from flask import request, abort, Flask, make_response, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
-from flask_caching import Cache
 from flask_cors import CORS
 # from flask_csv import send_csv
 
@@ -19,19 +18,13 @@ def create_app(env_name):
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    cache_config = {
-        'CACHE_TYPE': app.config["CACHE_TYPE"],
-        'CACHE_DEFAULT_TIMEOUT': app.config["CACHE_DEFAULT_TIMEOUT"],
-        'CACHE_DIR': app.config["CACHE_DIR"],
-        'CACHE_THRESHOLD': app.config["CACHE_THRESHOLD"]}
-    Cache(app, cache_config)
-    CORS(app, resources=r'/api/v1.0/*')
+    CORS(app, resources=r'/api/v3.0/*')
     db.init_app(app)
-    # cache.init_app(app)
 
     def require_apikey(view_function):
         @wraps(view_function)
         def decorated_function(*args, **kwargs):
+            print("decorator")
             '''decorator to check for api key '''
             if request.args.get('key') and \
                     request.args.get('key') == app.config['API_KEY']:
@@ -93,8 +86,11 @@ def create_app(env_name):
                                               round(obj.lat, 3)]
         feature['properties'] = {}
         feature['properties']['depth'] = obj.depth
-        feature['properties']['energy'] = obj.energy
-        feature['properties']['duration'] = obj.duration
+        # test for NaN. A NaN does not equal itself.
+        amp = obj.amplitude if obj.amplitude == obj.amplitude else 0
+        feature['properties']['amplitude'] = amp
+        if obj.magnitude is not None:
+            feature['properties']['magnitude'] = round(obj.magnitude, 1)
         feature['properties']['num_stas'] = obj.num_stas
         feature['properties']['time'] = obj.time
         feature['properties']['id'] = obj.id
@@ -102,14 +98,11 @@ def create_app(env_name):
 
     # ##################ROUTES##########################################
 
-    @app.route('/api/v1.0/events', methods=['GET'])
-    # this is how we can cache. memoize considers params as part of key
-    # otherwise use @cache.cached(...)
-    # @cache.memoize(86400)
+    @app.route('/api/v3.0/events', methods=['GET'])
     def get_events():
         '''Description: Get all tremor events in time period
 
-            Route: /api/v1.0/events
+            Route: /api/v3.0/events
             Method: GET
             Required Params:
                 start: string time stamp,
@@ -121,8 +114,8 @@ def create_app(env_name):
                 lon_max: float
             Returns: list of events [{event1},{event2},...,{eventn}] or 404
             Examples:
-            /api/v1.0/events?&start=2018-01-01&end=2018-01-02
-            /api/v1.0/events?&start=2018-01-01&end=2018-01-02&lat_min=40& \
+            /api/v3.0/events?&start=2018-01-01&end=2018-01-02
+            /api/v3.0/events?&start=2018-01-01&end=2018-01-02&lat_min=40& \
             lat_max=48&lon_min=-120&lon_max=-116
         '''
         starttime = request.args.get('starttime')
@@ -136,48 +129,45 @@ def create_app(env_name):
                 endtime and endtime is not None:
 
             # start by calling with class
-            events = Event.query.filter(Event.time.between(starttime, endtime))
+            events = Event.query.filter(
+                     Event.time.between(starttime, endtime)).filter(
+                    Event.catalog_version != 2)
 
             if lat_min and lat_min is not None and lat_max and \
                     lat_max is not None and lon_min and lon_min is not None \
                     and lon_max and lon_max is not None:
-                    # to chain, use returned collection to continue filtering
-                    events = events.filter(
-                        Event.lat.between(lat_min, lat_max)).filter(
-                        Event.lon.between(lon_min, lon_max))
-            # take a random subset of query
-            random_events = events.order_by(
-                db.func.random()).limit(Event.RETURN_LIMIT)
-            if len(random_events.all()) > 0:
-                count = events.count()
+                # to chain, use returned collection to continue filtering
+                events = events.filter(
+                    Event.lat.between(lat_min, lat_max)).filter(
+                    Event.lon.between(lon_min, lon_max))
+            # count before trucating
+            count = events.count()
+            if format is None or format != 'csv':
+                events = events.order_by(
+                    db.func.random()).limit(Event.RETURN_LIMIT)
+            if len(events.all()) > 0:
                 if format == 'csv':
                     filename = "tremor_events-{}-{}.csv".format(starttime,
                                                                 endtime)
-                    fieldnames = ['id', 'lat', 'lon', 'depth', 'energy',
-                                  'duration', 'num_stas', 'starttime',
-                                  'catalog_version', 'created_at']
+                    fieldnames = ['lat', 'lon', 'depth', 'time']
                     csv_io = io.StringIO()
                     csv_io.write(str(','.join(fieldnames) + " \n "))
-                    for e in random_events:
+                    for e in events:
                         csv_io.write(
-                            str("{}, {}, {}, {}, {}, {}, {}, {}, {} \n ")
-                            .format(e.id, e.lat, e.lon, e.depth,
-                                    e.energy, e.duration,
-                                    e.num_stas, e.time,
-                                    e.catalog_version, e.created_at
-                                    )
+                            str("{}, {}, {}, {} \n ")
+                            .format(e.lat, e.lon, e.depth, e.time)
                         )
                     response = Response(csv_io.getvalue(), mimetype='text/csv')
                     response.headers.set('Content-Disposition', 'attachment',
                                          filename=filename)
                     return response
                 else:
-                    geo_json = export_to_geojson(random_events, count)
+                    geo_json = export_to_geojson(events, count)
                     return geo_json
             json_abort("Resource not found", 404)
         json_abort("starttime and endtime params required", 422)
 
-    @app.route('/api/v1.0/event/<int:event_id>', methods=['GET'])
+    @app.route('/api/v3.0/event/<int:event_id>', methods=['GET'])
     def get_event(event_id):
         '''Description: Get event by id, or find the latest with event_id =0
 
@@ -186,8 +176,8 @@ def create_app(env_name):
             Required Params:
                 id
             Returns:single event
-            Example:/api/v1.0/event/123
-                    /api/v1.0/event/0 (latest)
+            Example:/api/v3.0/event/123
+                    /api/v3.0/event/0 (latest)
         '''
 
         if(event_id == 0):
@@ -199,11 +189,11 @@ def create_app(env_name):
             return jsonify(feature)
         json_abort("Resource not found", 404)
 
-    @app.route('/api/v1.0/day_counts', methods=['GET'])
+    @app.route('/api/v3.0/day_counts', methods=['GET'])
     def day_counts():
         '''Description: Get counts for each day of tremor
 
-            Route: /api/v1.0/day_count
+            Route: /api/v3.0/day_count
             Method: GET
             Required Params:
                 None
@@ -213,7 +203,7 @@ def create_app(env_name):
                 lon_min: float
                 lon_max: float
             Returns:collection of tuples
-            Example:/api/v1.0/day_count
+            Example:/api/v3.0/day_count
         '''
 
         lat_min = request.args.get('lat_min')
@@ -231,7 +221,7 @@ def create_app(env_name):
         return jsonify(collection)
 
     @require_apikey
-    @app.route('/api/v1.0/event/new', methods=['POST'])
+    @app.route('/api/v3.0/event/new', methods=['POST'])
     def event_new():
         pass
 
