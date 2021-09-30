@@ -89,7 +89,10 @@ def create_app(env_name):
         # test for NaN. A NaN does not equal itself.
         energy = obj.energy if obj.energy == obj.energy else 0
         feature['properties']['energy'] = energy
-        feature['properties']['duration']= obj.duration
+
+        duration = obj.duration if obj.energy == obj.energy else 0
+        feature['properties']['duration']= duration
+        
         if obj.magnitude is not None:
             feature['properties']['magnitude'] = round(obj.magnitude, 1)
         feature['properties']['num_stas'] = obj.num_stas
