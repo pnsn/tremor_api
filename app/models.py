@@ -63,7 +63,7 @@ class Event(db.Model):
     def get_latest(self):
         '''return latest event'''
         return self.query.filter(
-            (self.catalog_version == 1) | (self.catalog_version == 3)).order_by(
+            (self.catalog_version == 1) | (self.catalog_version == 4)).order_by(
             self.time.desc()).limit(1).one()
 
     @classmethod
@@ -75,13 +75,13 @@ class Event(db.Model):
         '''
 
         events = self.query.filter(
-            (self.catalog_version == 1) | (self.catalog_version == 3)).with_entities(
+            (self.catalog_version == 1) | (self.catalog_version == 4)).with_entities(
                 db.func.date_trunc('day', self.time)
                 .label('day'), db.func.count(self.time))
         if lat_min is not None and lat_max is not None \
            and lon_min is not None and lon_max is not None:
             events = events.filter(
-                self.catalog_version == 1 | self.catalog_version == 3).filter(
+                self.catalog_version == 1 | self.catalog_version == 4).filter(
                 self.lat.between(lat_min, lat_max)).filter(
                 self.lon.between(lon_min, lon_max))
         return events.group_by('day').all()

@@ -135,7 +135,7 @@ def create_app(env_name):
             # start by calling with class
             events = Event.query.filter(
                      Event.time.between(starttime, endtime)).filter(
-                     (Event.catalog_version == 1) | (Event.catalog_version == 3))
+                     (Event.catalog_version == 1) | (Event.catalog_version == 4))
 
             if lat_min and lat_min is not None and lat_max and \
                     lat_max is not None and lon_min and lon_min is not None \
