@@ -81,7 +81,7 @@ class Event(db.Model):
         if lat_min is not None and lat_max is not None \
            and lon_min is not None and lon_max is not None:
             events = events.filter(
-                self.catalog_version == 1 | self.catalog_version == 4).filter(
+                (self.catalog_version == 1) | (self.catalog_version == 4)).filter(
                 self.lat.between(lat_min, lat_max)).filter(
                 self.lon.between(lon_min, lon_max))
         return events.group_by('day').all()
